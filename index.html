@@ -81,6 +81,16 @@
             box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
             position: relative;
         }
+        .message-modal-content {
+            background-color: #1f2937;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+        }
         .close-btn {
             color: #aaa;
             float: right;
@@ -124,11 +134,6 @@
                         Start My Journey
                     </button>
                 </form>
-                
-                <!-- Message Box -->
-                <div id="messageBoxTop" class="mt-6 hidden">
-                    <p class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500"></p>
-                </div>
                 <p class="text-sm text-gray-400 mt-6 italic">We'll never share your email with anyone else, promise. <br>Read our <a href="#" id="privacyLinkTop" class="underline hover:text-white transition-colors duration-300">privacy policy</a> here.</p>
             </div>
         </div>
@@ -216,9 +221,6 @@
                         Start My Journey
                 </button>
             </form>
-            <div id="messageBoxBottom" class="mt-6 hidden">
-                <p class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-500"></p>
-            </div>
             <p class="text-sm text-gray-400 mt-6 italic">We'll never share your email with anyone else, promise. <br>Read our <a href="#" id="privacyLinkBottom" class="underline hover:text-white transition-colors duration-300">privacy policy</a> here.</p>
         </div>
     </div>
@@ -259,11 +261,20 @@
         </div>
     </div>
     
+    <!-- New Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="message-modal-content">
+            <p id="messageText" class="text-lg font-semibold"></p>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const forms = document.querySelectorAll('form');
-            const modal = document.getElementById('privacyPolicyModal');
-            const closeBtn = document.querySelector('.close-btn');
+            const privacyModal = document.getElementById('privacyPolicyModal');
+            const messageModal = document.getElementById('messageModal');
+            const messageText = document.getElementById('messageText');
+            const closeBtn = privacyModal.querySelector('.close-btn');
             const privacyLinks = document.querySelectorAll('[id^="privacyLink"]');
 
             // Function to validate email format
@@ -272,50 +283,42 @@
                 return re.test(String(email).toLowerCase());
             };
 
-            // Function to show a message in the correct message box
-            const showMessage = (message, type, messageBox) => {
-                const messageText = messageBox.querySelector('p');
-                if (!messageBox || !messageText) {
-                    console.error('Message box or text element not found.');
-                    return;
-                }
-                
+            // Function to show a message in the new modal
+            const showMessage = (message, type) => {
                 messageText.textContent = message;
-                messageBox.classList.remove('hidden');
-                
+                messageModal.style.display = 'block';
+
                 if (type === 'success') {
-                    messageBox.classList.remove('bg-red-500', 'text-red-100');
-                    messageBox.classList.add('bg-green-500', 'text-green-100');
+                    messageText.classList.remove('text-red-300');
+                    messageText.classList.add('text-green-300');
                 } else if (type === 'error') {
-                    messageBox.classList.remove('bg-green-500', 'text-green-100');
-                    messageBox.classList.add('bg-red-500', 'text-red-100');
+                    messageText.classList.remove('text-green-300');
+                    messageText.classList.add('text-red-300');
                 }
-                
+
                 setTimeout(() => {
-                    messageBox.classList.add('hidden');
-                }, 4000);
+                    messageModal.style.display = 'none';
+                }, 5000); // 5 seconds
             };
 
             forms.forEach(form => {
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
-                    const formId = e.target.id;
                     const nameInput = e.target.querySelector('input[type="text"]');
                     const emailInput = e.target.querySelector('input[type="email"]');
                     const submitButton = e.target.querySelector('button[type="submit"]');
-                    const messageBox = document.getElementById(formId.replace('emailForm', 'messageBox'));
 
                     const name = nameInput.value.trim();
                     const email = emailInput.value.trim();
                     
                     if (!name || !email) {
-                        showMessage('Please enter both your name and a valid email address.', 'error', messageBox);
+                        showMessage('Please enter both your name and a valid email address.', 'error');
                         return;
                     }
                     
                     if (!isValidEmail(email)) {
-                        showMessage('Please enter a valid email address.', 'error', messageBox);
+                        showMessage('Please enter a valid email address.', 'error');
                         return;
                     }
 
@@ -349,14 +352,13 @@
                             body: formData
                         });
                         
-                        console.log('Attempting to show success message.');
-                        showMessage(`Thanks for joining the tribe, ${name}! Jace will be in touch.`, 'success', messageBox);
+                        showMessage(`Thanks for joining the tribe, ${name}! Jace will be in touch.`, 'success');
                         nameInput.value = '';
                         emailInput.value = '';
                         
                     } catch (error) {
                         console.error('Submission error:', error);
-                        showMessage('Oops, something went wrong. Try again!', 'error', messageBox);
+                        showMessage('Oops, something went wrong. Try again!', 'error');
                     } finally {
                         submitButton.textContent = 'Start My Journey';
                         submitButton.disabled = false;
@@ -364,22 +366,22 @@
                 });
             });
 
-            // Handle modal actions
+            // Handle privacy modal actions
             privacyLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    modal.style.display = 'block';
+                    privacyModal.style.display = 'block';
                 });
             });
 
             closeBtn.addEventListener('click', () => {
-                modal.style.display = 'none';
+                privacyModal.style.display = 'none';
             });
 
             // Close the modal if the user clicks anywhere outside of the modal content
             window.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
+                if (event.target === privacyModal) {
+                    privacyModal.style.display = 'none';
                 }
             });
         });
