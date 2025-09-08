@@ -273,9 +273,13 @@
             };
 
             // Function to show a message in the correct message box
-            const showMessage = (message, type, form) => {
-                const messageBox = form.querySelector('[id^="messageBox"]');
+            const showMessage = (message, type, messageBox) => {
                 const messageText = messageBox.querySelector('p');
+                if (!messageBox || !messageText) {
+                    console.error('Message box or text element not found.');
+                    return;
+                }
+                
                 messageText.textContent = message;
                 messageBox.classList.remove('hidden');
                 
@@ -296,20 +300,22 @@
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
+                    const formId = e.target.id;
                     const nameInput = e.target.querySelector('input[type="text"]');
                     const emailInput = e.target.querySelector('input[type="email"]');
                     const submitButton = e.target.querySelector('button[type="submit"]');
+                    const messageBox = document.getElementById(formId.replace('emailForm', 'messageBox'));
 
                     const name = nameInput.value.trim();
                     const email = emailInput.value.trim();
                     
                     if (!name || !email) {
-                        showMessage('Please enter both your name and a valid email address.', 'error', e.target);
+                        showMessage('Please enter both your name and a valid email address.', 'error', messageBox);
                         return;
                     }
                     
                     if (!isValidEmail(email)) {
-                        showMessage('Please enter a valid email address.', 'error', e.target);
+                        showMessage('Please enter a valid email address.', 'error', messageBox);
                         return;
                     }
 
@@ -344,13 +350,13 @@
                         });
                         
                         console.log('Attempting to show success message.');
-                        showMessage(`Thanks for joining the tribe, ${name}! Jace will be in touch.`, 'success', e.target);
+                        showMessage(`Thanks for joining the tribe, ${name}! Jace will be in touch.`, 'success', messageBox);
                         nameInput.value = '';
                         emailInput.value = '';
                         
                     } catch (error) {
                         console.error('Submission error:', error);
-                        showMessage('Oops, something went wrong. Try again!', 'error', e.target);
+                        showMessage('Oops, something went wrong. Try again!', 'error', messageBox);
                     } finally {
                         submitButton.textContent = 'Start My Journey';
                         submitButton.disabled = false;
